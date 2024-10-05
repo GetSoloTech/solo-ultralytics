@@ -536,8 +536,8 @@ class Results(SimpleClass):
         if pred_boxes is not None and show_boxes:
             for i, d in enumerate(reversed(pred_boxes)):
                 c, conf, id = int(d.cls), float(d.conf) if conf else None, None if d.id is None else int(d.id.item())
-                name = ("" if id is None else f"id:{id} ") + names[c]
-                label = (f"{name} {conf:.2f}" if conf else name) if labels else None
+                name = ("" if id is None else f"{id}* ") + names[c]
+                label = (f"{name}") if labels else None
                 box = d.xyxyxyxy.reshape(-1, 4, 2).squeeze() if is_obb else d.xyxy.squeeze()
                 annotator.box_label(
                     box,

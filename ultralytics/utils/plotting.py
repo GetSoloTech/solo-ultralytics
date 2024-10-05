@@ -187,7 +187,7 @@ class Annotator:
             assert im.data.contiguous, "Image not contiguous. Apply np.ascontiguousarray(im) to Annotator input images."
             self.im = im if im.flags.writeable else im.copy()
             self.tf = max(self.lw - 1, 1)  # font thickness
-            self.sf = self.lw / 3  # font scale
+            self.sf = self.lw / 4  # font scale
         # Pose
         self.skeleton = [
             [16, 14],
@@ -365,7 +365,7 @@ class Annotator:
                 p1, p2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
                 cv2.rectangle(self.im, p1, p2, color, thickness=self.lw, lineType=cv2.LINE_AA)
             if label:
-                w, h = cv2.getTextSize(label, 0, fontScale=self.sf, thickness=self.tf)[0]  # text width, height
+                w, h = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8, thickness=1)[0]  # text width, height
                 h += 3  # add pixels to pad text
                 outside = p1[1] >= h  # label fits outside box
                 if p1[0] > self.im.shape[1] - w:  # shape is (h, w), check if label extend beyond right side of image
@@ -376,10 +376,10 @@ class Annotator:
                     self.im,
                     label,
                     (p1[0], p1[1] - 2 if outside else p1[1] + h - 1),
-                    0,
-                    self.sf,
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8,
                     txt_color,
-                    thickness=self.tf,
+                    thickness=1,
                     lineType=cv2.LINE_AA,
                 )
 
