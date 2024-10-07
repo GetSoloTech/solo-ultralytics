@@ -170,7 +170,7 @@ class Annotator:
         non_ascii = not is_ascii(example)  # non-latin labels, i.e. asian, arabic, cyrillic
         input_is_pil = isinstance(im, Image.Image)
         self.pil = pil or non_ascii or input_is_pil
-        self.lw = line_width or max(round(sum(im.size if input_is_pil else im.shape) / 2 * 0.003), 2)
+        self.lw = line_width or max(round(sum(im.size if input_is_pil else im.shape) / 2 * 0.001), 1.5)
         if self.pil:  # use PIL
             self.im = im if input_is_pil else Image.fromarray(im)
             self.draw = ImageDraw.Draw(self.im)
@@ -187,7 +187,8 @@ class Annotator:
             assert im.data.contiguous, "Image not contiguous. Apply np.ascontiguousarray(im) to Annotator input images."
             self.im = im if im.flags.writeable else im.copy()
             self.tf = max(self.lw - 1, 1)  # font thickness
-            self.sf = self.lw / 4  # font scale
+            self.sf = self.lw / 3  # font scale
+
         # Pose
         self.skeleton = [
             [16, 14],
@@ -365,7 +366,7 @@ class Annotator:
                 p1, p2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
                 cv2.rectangle(self.im, p1, p2, color, thickness=self.lw, lineType=cv2.LINE_AA)
             if label:
-                w, h = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.8, thickness=1)[0]  # text width, height
+                w, h = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, fontScale=self.sf, thickness=self.tf)[0]  # text width, height
                 h += 3  # add pixels to pad text
                 outside = p1[1] >= h  # label fits outside box
                 if p1[0] > self.im.shape[1] - w:  # shape is (h, w), check if label extend beyond right side of image
@@ -377,9 +378,9 @@ class Annotator:
                     label,
                     (p1[0], p1[1] - 2 if outside else p1[1] + h - 1),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    0.8,
+                    self.sf,
                     txt_color,
-                    thickness=1,
+                    thickness=self.tf,
                     lineType=cv2.LINE_AA,
                 )
 
