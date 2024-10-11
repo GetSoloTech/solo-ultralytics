@@ -88,7 +88,7 @@ class Colors:
     def __init__(self):
         """Initialize colors as hex = matplotlib.colors.TABLEAU_COLORS.values()."""
         hexs = (
-            "042AFF",
+            "0B0425",
             "0BDBEB",
             "F3F3F3",
             "00DFB7",
@@ -170,7 +170,7 @@ class Annotator:
         non_ascii = not is_ascii(example)  # non-latin labels, i.e. asian, arabic, cyrillic
         input_is_pil = isinstance(im, Image.Image)
         self.pil = pil or non_ascii or input_is_pil
-        self.lw = line_width or max(round(sum(im.size if input_is_pil else im.shape) / 2 * 0.001), 1.5)
+        self.lw = line_width or max(round(sum(im.size if input_is_pil else im.shape) / 2 * 0.001), 2)
         if self.pil:  # use PIL
             self.im = im if input_is_pil else Image.fromarray(im)
             self.draw = ImageDraw.Draw(self.im)
@@ -186,8 +186,8 @@ class Annotator:
         else:  # use cv2
             assert im.data.contiguous, "Image not contiguous. Apply np.ascontiguousarray(im) to Annotator input images."
             self.im = im if im.flags.writeable else im.copy()
-            self.tf = max(self.lw - 1, 1)  # font thickness
-            self.sf = self.lw / 3  # font scale
+            self.tf = max(self.lw - 1, 2)  # font thickness
+            self.sf = self.lw / 2  # font scale
 
         # Pose
         self.skeleton = [
