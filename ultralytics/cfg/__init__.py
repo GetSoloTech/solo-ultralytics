@@ -151,6 +151,7 @@ CFG_INT_KEYS = {  # integer-only arguments
 }
 CFG_BOOL_KEYS = {  # boolean-only arguments
     "save",
+    "save_tracks"
     "exist_ok",
     "verbose",
     "deterministic",
