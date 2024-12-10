@@ -14,6 +14,7 @@ import torch
 
 from ultralytics.data.augment import LetterBox
 from ultralytics.utils import LOGGER, SimpleClass, ops
+from ultralytics.utils.files import increment_path
 from ultralytics.utils.checks import check_requirements
 from ultralytics.utils.plotting import Annotator, colors, save_one_box
 from ultralytics.utils.torch_utils import smart_inference_mode
@@ -626,6 +627,32 @@ class Results(SimpleClass):
             filename = f"results_{Path(self.path).name}"
         self.plot(save=True, filename=filename, *args, **kwargs)
         return filename
+
+    
+    def save_id(self, save_dir, file_prefix ="id", file_name=Path("img_.jpg")): 
+        """
+        Saves cropped detection images grouped by class and tracking ID.
+        """
+        if self.probs is not None:
+            LOGGER.warning("WARNING ⚠️ Classify task do not support `save_crop_by_id`.")
+            return
+        if self.obb is not None:
+            LOGGER.warning("WARNING ⚠️ OBB task do not support `save_crop_by_id`.")
+            return
+
+        for d in self.boxes:
+            class_name = self.names[int(d.cls)]
+            object_id = f"{file_prefix}_{int(d.id)}"
+
+            # Generate the directory path
+            class_dir = Path(save_dir) / class_name / object_id
+            class_dir.mkdir(parents=True, exist_ok=True)
+            save_one_box(
+                d.xyxy,
+                self.orig_img.copy(),
+                file=class_dir / file_name,
+                BGR=True,
+            )
 
     def verbose(self):
         """

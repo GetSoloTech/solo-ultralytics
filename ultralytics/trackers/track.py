@@ -70,10 +70,14 @@ def on_predict_postprocess_end(predictor: object, persist: bool = False) -> None
         tracker = predictor.trackers[i if is_stream else 0]
         vid_path = predictor.save_dir / Path(path[i]).name
         if not persist and predictor.vid_path[i if is_stream else 0] != vid_path:
-            tracker.reset()
+            if not predictor.args.ext_track:
+                tracker.reset()
             predictor.vid_path[i if is_stream else 0] = vid_path
 
-        det = (predictor.results[i].obb if is_obb else predictor.results[i].boxes).cpu().numpy()
+        if not predictor.args.ext_track:
+            det = (predictor.results[i].obb if is_obb else predictor.results[i].boxes).cpu().numpy()
+        else:
+            det = (predictor.results[i].obb if is_obb else predictor.results[i].boxes.data).cpu().numpy()
         if len(det) == 0:
             continue
         tracks = tracker.update(det, im0s[i])
