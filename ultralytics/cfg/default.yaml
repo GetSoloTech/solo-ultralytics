@@ -126,3 +126,4 @@ cfg: # (str, optional) for overriding defaults.yaml
 
 # Tracker settings ------------------------------------------------------------------------------------------------------
 tracker: bytetrack.yaml # (str) tracker type, choices=[bytetrack.yaml]
+ext_track: False # (bool) For using external tracker

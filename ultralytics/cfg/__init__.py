@@ -185,6 +185,7 @@ CFG_BOOL_KEYS = {  # boolean-only arguments
     "nms",
     "profile",
     "multi_scale",
+    "ext_Track",
 }
 
 

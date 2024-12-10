@@ -71,7 +71,6 @@ class STrack(BaseTrack):
         self.kalman_filter = None
         self.mean, self.covariance = None, None
         self.is_activated = False
-        self.track_id = None
 
         self.score = score
         self.tracklet_len = 0
@@ -123,15 +122,13 @@ class STrack(BaseTrack):
     def activate(self, kalman_filter, frame_id):
         """Activate a new tracklet using the provided Kalman filter and initialize its state and covariance."""
         self.kalman_filter = kalman_filter
-        self.temp = self.temp_id()
+        self.track_id = self.next_id()
         self.mean, self.covariance = self.kalman_filter.initiate(self.convert_coords(self._tlwh))
 
         self.tracklet_len = 0
         self.state = TrackState.Tracked
         if frame_id == 1:
-            self.track_id = self.next_id()
             self.is_activated = True
-
         self.frame_id = frame_id
         self.start_frame = frame_id
 
@@ -151,7 +148,7 @@ class STrack(BaseTrack):
         self.angle = new_track.angle
         self.idx = new_track.idx
 
-    def update(self, new_track, frame_id, min_hits):
+    def update(self, new_track, frame_id):
         """
         Update the state of a matched track.
 
@@ -173,10 +170,7 @@ class STrack(BaseTrack):
             self.mean, self.covariance, self.convert_coords(new_tlwh)
         )
         self.state = TrackState.Tracked
-        if self.tracklet_len == min_hits:
-            if self.track_id == None:
-                self.track_id = self.next_id()
-                self.is_activated = True  
+        self.is_activated = True
 
         self.score = new_track.score
         self.cls = new_track.cls
@@ -347,14 +341,14 @@ class BYTETracker:
             track = strack_pool[itracked]
             det = detections[idet]
             if track.state == TrackState.Tracked:
-                track.update(det, self.frame_id, self.args.min_hits)
+                track.update(det, self.frame_id)
                 activated_stracks.append(track)
             else:
                 track.re_activate(det, self.frame_id, new_id=False)
                 refind_stracks.append(track)
         # Step 3: Second association, with low score detection boxes association the untrack to the low score detections
         detections_second = self.init_track(dets_second, scores_second, cls_second, img)
-        r_tracked_stracks = [strack_pool[i] for i in u_track]
+        r_tracked_stracks = [strack_pool[i] for i in u_track if strack_pool[i].state == TrackState.Tracked]
         # TODO
         dists = matching.iou_distance(r_tracked_stracks, detections_second)
         matches, u_track, u_detection_second = matching.linear_assignment(dists, thresh=0.5)
@@ -362,7 +356,7 @@ class BYTETracker:
             track = r_tracked_stracks[itracked]
             det = detections_second[idet]
             if track.state == TrackState.Tracked:
-                track.update(det, self.frame_id, self.args.min_hits)
+                track.update(det, self.frame_id)
                 activated_stracks.append(track)
             else:
                 track.re_activate(det, self.frame_id, new_id=False)
@@ -373,13 +367,12 @@ class BYTETracker:
             if track.state != TrackState.Lost:
                 track.mark_lost()
                 lost_stracks.append(track)
-
         # Deal with unconfirmed tracks, usually tracks with only one beginning frame
         detections = [detections[i] for i in u_detection]
         dists = self.get_dists(unconfirmed, detections)
-        matches, u_unconfirmed, u_detection = matching.linear_assignment(dists, thresh=self.args.min_hits_thresh)
+        matches, u_unconfirmed, u_detection = matching.linear_assignment(dists, thresh=0.7)
         for itracked, idet in matches:
-            unconfirmed[itracked].update(detections[idet], self.frame_id, self.args.min_hits)
+            unconfirmed[itracked].update(detections[idet], self.frame_id)
             activated_stracks.append(unconfirmed[itracked])
         for it in u_unconfirmed:
             track = unconfirmed[it]
