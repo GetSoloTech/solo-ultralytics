@@ -11,9 +11,10 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import cv2
 
 from ultralytics.data.augment import LetterBox
-from ultralytics.utils import LOGGER, SimpleClass, ops
+from ultralytics.utils import LOGGER, SimpleClass, ops, MACOS, WINDOWS
 from ultralytics.utils.files import increment_path
 from ultralytics.utils.checks import check_requirements
 from ultralytics.utils.plotting import Annotator, colors, save_one_box
@@ -202,6 +203,7 @@ class Results(SimpleClass):
         obb (OBB | None): Object containing oriented bounding boxes.
         speed (Dict[str, float | None]): Dictionary of preprocess, inference, and postprocess speeds.
         names (Dict[int, str]): Dictionary mapping class IDs to class names.
+        vid_writer (dict): Dictionary of {save_path: video_writer, ...} writer for saving video output.
         path (str): Path to the image file.
         _keys (Tuple[str, ...]): Tuple of attribute names for internal use.
 
@@ -269,6 +271,7 @@ class Results(SimpleClass):
         self.names = names
         self.path = path
         self.save_dir = None
+        self.vid_writer = {}  # dict of {save_path: video_writer, ...}
         self._keys = "boxes", "masks", "probs", "keypoints", "obb"
 
     def __getitem__(self, idx):
@@ -653,6 +656,52 @@ class Results(SimpleClass):
                 file=class_dir / file_name,
                 BGR=True,
             )
+        
+    # def save_single_track_videos(self, save_dir="", frame=0, dataset = None, dataset_fps = None):
+    #     """
+    #     Save video outputs for each track ID while blurring the rest of the video.
+    #     Outputs a separate video for each track ID.
+    #     """
+
+    #     Path(save_dir).mkdir(parents=True, exist_ok=True)
+
+    #     im = self.orig_img  # Frame with all tracks drawn
+    #     blurred_frame = cv2.GaussianBlur(im, (51, 51), 0)  # Blur the entire frame
+
+    #     # Save videos and streams
+    #     if dataset in {"stream", "video"}:
+    #         fps = dataset_fps if dataset == "video" else 30
+
+    #         if self.boxes.is_track:                
+    #             for box in self.boxes:
+    #                 track_id = int(box.id.numpy())
+    #                 xyxy_box = box.xyxy.numpy()
+
+    #                 if track_id not in self.vid_writer:  # New video for this track
+    #                     clip_path = f"{save_dir}/id_{track_id}.mp4"
+    #                     suffix, fourcc = (".mp4", "avc1") if MACOS else (".avi", "WMV2") if WINDOWS else (".avi", "MJPG")
+    #                     self.vid_writer[track_id] = cv2.VideoWriter(
+    #                         filename=str(Path(clip_path).with_suffix(suffix)),
+    #                         fourcc=cv2.VideoWriter_fourcc(*fourcc),
+    #                         fps=fps,  # integer required
+    #                         frameSize=(im.shape[1], im.shape[0]),  # (width, height)
+    #                     )
+                    
+    #                 x1, y1, x2, y2 = map(int, xyxy_box[0])
+    #                 track_frame = blurred_frame.copy()
+    #                 track_frame[y1:y2, x1:x2] = im[y1:y2, x1:x2]  # Overlay unblurred region
+                    
+    #                 # Save video
+    #                 self.vid_writer[track_id].write(track_frame)
+
+    #         else:
+    #             # Save images for each track if not in video mode
+    #             for box in self.boxes:
+    #                 x1, y1, x2, y2 = map(int, box.xyxy.numpy()[0])  # Convert coordinates to integers
+    #                 track_frame = blurred_frame.copy()
+    #                 track_frame[y1:y2, x1:x2] = im[y1:y2, x1:x2]
+    #                 track_save_path = f"{save_dir}/track_{int(box.id)}_{frame}.jpg"
+    #                 cv2.imwrite(track_save_path, track_frame)
 
     def verbose(self):
         """
