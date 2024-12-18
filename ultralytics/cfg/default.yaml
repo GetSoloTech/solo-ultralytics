@@ -67,6 +67,7 @@ embed: # (list[int], optional) return feature vectors/embeddings from given laye
 # Visualize settings ---------------------------------------------------------------------------------------------------
 show: False # (bool) show predicted images and videos if environment allows
 save_frames: False # (bool) save predicted individual video frames
+save_tracks: False # (bool) save cropped track_ids 
 save_txt: False # (bool) save results as .txt file
 save_conf: False # (bool) save results with confidence scores
 save_crop: False # (bool) save cropped images with results
@@ -124,4 +125,5 @@ crop_fraction: 1.0 # (float) image crop fraction for classification (0.1-1), 1.0
 cfg: # (str, optional) for overriding defaults.yaml
 
 # Tracker settings ------------------------------------------------------------------------------------------------------
-tracker: botsort.yaml # (str) tracker type, choices=[botsort.yaml, bytetrack.yaml]
+tracker: bytetrack.yaml # (str) tracker type, choices=[bytetrack.yaml]
+ext_track: False # (bool) For using external tracker

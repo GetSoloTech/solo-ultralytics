@@ -34,6 +34,7 @@ class BaseTrack:
 
     Attributes:
         _count (int): Class-level counter for unique track IDs.
+        _temp_id (int): Temp counter before activating the track.
         track_id (int): Unique identifier for the track.
         is_activated (bool): Flag indicating whether the track is currently active.
         state (TrackState): Current state of the track.
@@ -64,6 +65,8 @@ class BaseTrack:
     """
 
     _count = 0
+
+    _temp_id = 0
 
     def __init__(self):
         """
@@ -97,6 +100,11 @@ class BaseTrack:
         """Increment and return the next unique global track ID for object tracking."""
         BaseTrack._count += 1
         return BaseTrack._count
+    
+    @staticmethod
+    def temp_id():
+        BaseTrack._temp_id += 1
+        return BaseTrack._temp_id
 
     def activate(self, *args):
         """Activates the track with provided arguments, initializing necessary attributes for tracking."""
