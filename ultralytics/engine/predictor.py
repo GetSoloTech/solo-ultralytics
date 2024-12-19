@@ -432,15 +432,33 @@ class BasePredictor:
                         cv2.imwrite(track_save_path, track_frame)
 
     
-    def show(self, p=""):
-        """Display an image in a window using the OpenCV imshow function."""
+    def show(self, p="", desired_width=1280, desired_height=720):
+        """
+        Display an image in a window using the OpenCV imshow function.
+        Ensures the image is resized to a consistent display size.
+        
+        Args:
+            p (str): Window name.
+            desired_width (int): Desired width of the displayed image.
+            desired_height (int): Desired height of the displayed image.
+        """
+        # Get the plotted image
         im = self.plotted_img
+
+        # Resize the image to the desired dimensions
+        resized_im = cv2.resize(im, (desired_width, desired_height))
+
+        # For Linux systems, create a named window with resizing allowed
         if platform.system() == "Linux" and p not in self.windows:
             self.windows.append(p)
-            cv2.namedWindow(p, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow window resize (Linux)
-            cv2.resizeWindow(p, im.shape[1], im.shape[0])  # (width, height)
-        cv2.imshow(p, im)
-        cv2.waitKey(300 if self.dataset.mode == "image" else 1)  # 1 millisecond
+            cv2.namedWindow(p, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # Allow window resizing
+            cv2.resizeWindow(p, desired_width, desired_height)  # Set the window size
+
+        # Display the resized image
+        cv2.imshow(p, resized_im)
+
+        # Wait for 300ms for images or 1ms for videos
+        cv2.waitKey(300 if self.dataset.mode == "image" else 1)  # 1 millisecond for video
 
     def run_callbacks(self, event: str):
         """Runs all registered callbacks for a specific event."""
