@@ -349,7 +349,8 @@ class BasePredictor:
         if self.args.save_crop:
             result.save_crop(save_dir=self.save_dir / "crops", file_name=self.txt_path.stem)
         if self.args.save_tracks:
-            result.save_id(save_dir=self.save_dir / "id_crops")
+            #result.save_id(save_dir=self.save_dir / "id_crops")
+            self.save_single_track_videos(str(self.save_dir / "id_clips"), frame)
         if self.args.show:
             self.show(str(p))
         if self.args.save:
@@ -385,6 +386,52 @@ class BasePredictor:
         else:
             cv2.imwrite(save_path, im)
 
+
+    def save_single_track_videos(self, save_dir="", frame=0):
+        """
+        Save video outputs for each track ID while blurring the rest of the video.
+        Outputs a separate video for each track ID.
+        """
+        Path(save_dir).mkdir(parents=True, exist_ok=True)
+      
+        for result in self.results:  
+            im = result.orig_img  
+            blurred_frame = cv2.GaussianBlur(im, (101, 101), 0)  # Blur the entire frame
+            
+            # Save videos and streams
+            if self.dataset.mode in {"stream", "video"}:
+                fps = self.dataset.fps if self.dataset.mode == "video" else 30
+                boxes = result.boxes  # Access boxes from the current result
+                if boxes.is_track:                
+                    for box in boxes:
+                        track_id = int(box.id.numpy())
+                        xyxy_box = box.xyxy.numpy()
+                        if track_id not in self.vid_writer:  # New video for this track
+                            clip_path = f"{save_dir}/track_{track_id}.mp4"
+                            suffix, fourcc = (".mp4", "avc1") if MACOS else (".avi", "WMV2") if WINDOWS else (".avi", "MJPG")
+                            self.vid_writer[track_id] = cv2.VideoWriter(
+                                filename=str(Path(clip_path).with_suffix(suffix)),
+                                fourcc=cv2.VideoWriter_fourcc(*fourcc),
+                                fps=fps,  # integer required
+                                frameSize=(im.shape[1], im.shape[0]),  # (width, height)
+                            )
+                        x1, y1, x2, y2 = map(int, xyxy_box[0])
+                        track_frame = blurred_frame.copy()
+                        track_frame[y1:y2, x1:x2] = im[y1:y2, x1:x2]  # Overlay unblurred region
+                        
+                        # Save video
+                        self.vid_writer[track_id].write(track_frame)
+
+                else:
+                    # Save images for each track if not in video mode
+                    for box in boxes:
+                        x1, y1, x2, y2 = map(int, box.xyxy.numpy()[0])  # Convert coordinates to integers
+                        track_frame = blurred_frame.copy()
+                        track_frame[y1:y2, x1:x2] = im[y1:y2, x1:x2]
+                        track_save_path = f"{save_dir}/track_{int(box.id)}_{frame}.jpg"
+                        cv2.imwrite(track_save_path, track_frame)
+
+    
     def show(self, p=""):
         """Display an image in a window using the OpenCV imshow function."""
         im = self.plotted_img
