@@ -11,7 +11,6 @@ from pathlib import Path
 
 import numpy as np
 import torch
-import cv2
 
 from ultralytics.data.augment import LetterBox
 from ultralytics.utils import LOGGER, SimpleClass, ops
