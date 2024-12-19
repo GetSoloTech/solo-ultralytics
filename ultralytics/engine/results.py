@@ -13,7 +13,7 @@ import numpy as np
 import torch
 
 from ultralytics.data.augment import LetterBox
-from ultralytics.utils import LOGGER, SimpleClass, ops, MACOS, WINDOWS
+from ultralytics.utils import LOGGER, SimpleClass, ops
 from ultralytics.utils.files import increment_path
 from ultralytics.utils.checks import check_requirements
 from ultralytics.utils.plotting import Annotator, colors, save_one_box
@@ -202,7 +202,6 @@ class Results(SimpleClass):
         obb (OBB | None): Object containing oriented bounding boxes.
         speed (Dict[str, float | None]): Dictionary of preprocess, inference, and postprocess speeds.
         names (Dict[int, str]): Dictionary mapping class IDs to class names.
-        vid_writer (dict): Dictionary of {save_path: video_writer, ...} writer for saving video output.
         path (str): Path to the image file.
         _keys (Tuple[str, ...]): Tuple of attribute names for internal use.
 
@@ -270,7 +269,6 @@ class Results(SimpleClass):
         self.names = names
         self.path = path
         self.save_dir = None
-        self.vid_writer = {}  # dict of {save_path: video_writer, ...}
         self._keys = "boxes", "masks", "probs", "keypoints", "obb"
 
     def __getitem__(self, idx):
